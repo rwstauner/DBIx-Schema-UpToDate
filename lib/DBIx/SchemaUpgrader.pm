@@ -131,7 +131,7 @@ Returns the latest [possible] version of the database schema.
 
 sub latest_version {
 	my ($self) = @_;
-	return $#{ $self->instructions };
+	return scalar @{ $self->instructions };
 }
 
 =item set_version
@@ -166,7 +166,7 @@ sub update_to_version {
 	$dbh->begin_work();
 
 	# execute instructions to update database to $version
-	$self->instructions->[$version]->($self);
+	$self->instructions->[$version - 1]->($self);
 
 	# save the version now in case we get interrupted before the next commit
 	$self->set_version($version);
