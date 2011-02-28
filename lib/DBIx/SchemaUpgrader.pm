@@ -69,13 +69,16 @@ Determine the current version of the database schema.
 sub current_version {
 	my ($self) = @_;
 	my $dbh = $self->dbh;
+	my $table = $self->version_table_name;
 	my $version = -1;
-	my $tables = $dbh->table_info()->fetchall_hashref('table_name');
+
+	my $sth = $dbh->table_info('%', '%', $table, 'TABLE');
+	my $tables = $sth->fetchall_arrayref;
 
 	# get current database version
-	if( exists($tables->{version}) ){
+	if( @$tables ){
 		my $v = $dbh->selectcol_arrayref(
-			'SELECT version from version ORDER BY version DESC'
+			"SELECT version from $table ORDER BY version DESC"
 		)->[0];
 		$version = $v
 			if defined $v;
