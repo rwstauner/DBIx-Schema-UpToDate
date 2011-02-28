@@ -52,7 +52,14 @@ sub build {
 	my $dbh = $self->dbh;
 
 	my $current = $self->current_version;
-	my $latest  = $self->latest_version;
+	if( !defined($current) ){
+		$self->initialize_version_table;
+		$current = $self->current_version;
+		die("Unable to initialize version table\n")
+			if !defined($current);
+	}
+
+	my $latest = $self->latest_version;
 
 	# execute each instruction required to go from current to latest version
 	# (starting with next version, obviously (don't redo current))
@@ -70,7 +77,7 @@ sub current_version {
 	my ($self) = @_;
 	my $dbh = $self->dbh;
 	my $table = $self->version_table_name;
-	my $version = -1;
+	my $version;
 
 	my $sth = $dbh->table_info('%', '%', $table, 'TABLE');
 	my $tables = $sth->fetchall_arrayref;
