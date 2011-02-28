@@ -72,15 +72,30 @@ sub current_version {
 	my $version = -1;
 	my $tables = $dbh->table_info()->fetchall_hashref('table_name');
 
+	# get current database version
 	if( exists($tables->{version}) ){
 		my $v = $dbh->selectcol_arrayref(
-			'SELECT version from version'
+			'SELECT version from version ORDER BY version DESC'
 		)->[0];
 		$version = $v
 			if defined $v;
 	}
 
 	return $version;
+}
+
+=item initialize_version_table
+
+Create the version metadata table in the database and
+insert initial version record.
+
+=cut
+
+sub initialize_version_table {
+	my ($self) = @_;
+	$self->dbh->do('CREATE TABLE ' . $self->version_table_name .
+		' (version integer, upgraded timestamp)');
+	$self->set_version(0);
 }
 
 =item instructions
@@ -95,11 +110,6 @@ on the L</dbh> until the database schema is up to date.
 sub instructions {
 	my ($self) = @_;
 	return $self->{instructions} ||= [
-		# v0: 2011-02-08: database version metadata
-		sub {
-			$self->dbh->do('CREATE TABLE version (version integer)');
-			$self->dbh->do('INSERT INTO  version (version) VALUES(0)');
-		},
 	];
 }
 
@@ -125,7 +135,9 @@ Called from L</update_to_version> after executing the appropriate instruction.
 
 sub set_version {
 	my ($self, $version) = @_;
-	$self->dbh->do('UPDATE version SET version = ?', {}, $version);
+	$self->dbh->do('INSERT INTO ' . $self->version_table_name .
+		' (version, upgraded) VALUES(?, ?)',
+		{}, $version, time);
 }
 
 =item update_to_version
@@ -150,6 +162,18 @@ sub update_to_version {
 	$self->set_version($version);
 
 	$dbh->commit();
+}
+
+=item version_table_name
+
+The name to use the for the schema version metadata.
+
+Defaults to C<'schema_version'>.
+
+=cut
+
+sub version_table_name {
+	'schema_version'
 }
 
 1;
@@ -183,6 +207,7 @@ B<NOTE>: This API is under construction and subject to change.
 
 =for :list
 * Rename this module
+* use L<DBI/quote_identifier> on the table name
 
 =head1 SEE ALSO
 
