@@ -79,13 +79,13 @@ sub current_version {
 	my $table = $self->version_table_name;
 	my $version;
 
-	my $sth = $dbh->table_info('%', '%', $table, 'TABLE');
-	my $tables = $sth->fetchall_arrayref;
+	my $tables = $dbh->table_info('%', '%', $table, 'TABLE')
+		->fetchall_arrayref;
 
 	# get current database version
 	if( @$tables ){
 		my $v = $dbh->selectcol_arrayref(
-			"SELECT version from $table ORDER BY version DESC"
+			"SELECT version from $table ORDER BY version DESC LIMIT 1"
 		)->[0];
 		$version = $v
 			if defined $v;
