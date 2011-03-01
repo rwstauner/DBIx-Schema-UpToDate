@@ -195,6 +195,8 @@ sub version_table_name {
 
 1;
 
+=for :stopwords TODO dbh
+
 =head1 SYNOPSIS
 
 	package Local::Database;
@@ -233,7 +235,7 @@ so that all you have to do is define the updates you want to apply.
 This is done with subs (coderefs) so you can access the object
 and its database handle.
 
-It is intentially simple and is not intended for large scale applications.
+It is intentionally simple and is not intended for large scale applications.
 It may be a good fit for small embedded databases.
 It can also be useful if you need to reference other parts of your application
 as the subs allow you to utilize the object (and anything else you can reach).
@@ -280,8 +282,8 @@ for testing your subs...
 =for :list
 * Come up with a better name (too late).
 * Check for DBI errors?
-You should probably use RaiseError in DBI,
-but perhaps we should be checking the return values of certain L<DBI> calls.
+You should probably use L<DBI/RaiseError>,
+but perhaps we should be checking the return values of L<DBI/do>.
 * Use L<DBI/quote_identifier> on the table name
 * Add an initial_version attribute to allow altering the history
 
@@ -300,9 +302,9 @@ Was close to what I was looking for, but not customizable enough.
 Were I to subclass it I would have needed to overwrite the two main methods.
 * L<DBIx::VersionedDDL>
 Much bigger scale than what I was looking for.
-Needed something without Moose.
+Needed something without L<Moose>.
 * L<ORLite::Migrate> (L<http://use.perl.org/~Alias/journal/38087>)
 Much bigger scale than what I was looking for.
-Wasn't using ORLite, and didn't want to use separate script files.
+Wasn't using L<ORLite>, and didn't want to use separate script files.
 
 =cut
