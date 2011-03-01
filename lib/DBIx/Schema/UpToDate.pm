@@ -15,9 +15,15 @@ Options used by the base module:
 * C<dbh> - A B<d>ataB<b>ase B<h>andle (as returned from C<< DBI->connect >>)
 Database commands will be executed against this handle.
 * C<auto_update> - Boolean
-By default L</up_to_date> is called at initialization (just after being blessed).
+By default L</up_to_date> is called at initialization
+(just after being blessed).
 Set this value to false to disable this if you need to do something else
 before updating.  You will have to call L</up_to_date> yourself.
+* C<transactions> - Boolean
+By default L</update_to_version> does its work in a transaction.
+Set this value to false to disable this behavior
+(in case your database doesn't support transactions
+or you are mananging transactions yourself).
 
 =cut
 
@@ -25,6 +31,7 @@ sub new {
 	my $class = shift;
 	my $self = {
 		auto_update => 1,
+		transactions => 1,
 		@_ == 1 ? %{$_[0]} : @_
 	};
 	bless $self, $class;
@@ -152,8 +159,10 @@ sub update_to_version {
 	my ($self, $version) = @_;
 	my $dbh = $self->dbh;
 
-	$dbh->begin_work()
-		or croak $dbh->errstr;
+	if( $self->{transactions} ){
+		$dbh->begin_work()
+			or croak $dbh->errstr;
+	}
 
 	# execute updates to bring database to $version
 	$self->updates->[$version - 1]->($self);
@@ -161,8 +170,10 @@ sub update_to_version {
 	# save the version now in case we get interrupted before the next commit
 	$self->set_version($version);
 
-	$dbh->commit()
-		or croak $dbh->errstr;
+	if( $self->{transactions} ){
+		$dbh->commit()
+			or croak $dbh->errstr;
+	}
 }
 
 =method up_to_date
