@@ -249,7 +249,11 @@ can overwrite the ones you need to get the customization you require.
 
 =for :list
 * Rename this module
+* Check for DBI errors?
+You should probably use RaiseError in DBI,
+but perhaps we should be checking the return values of certain L<DBI> calls.
 * Use L<DBI/quote_identifier> on the table name
+* Add an initial_version attribute to allow altering the history
 
 =head1 RATIONALE
 
