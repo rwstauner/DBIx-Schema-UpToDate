@@ -164,7 +164,6 @@ to bring the schema up to date.
 
 sub up_to_date {
 	my ($self) = @_;
-	my $dbh = $self->dbh;
 
 	my $current = $self->current_version;
 	if( !defined($current) ){
