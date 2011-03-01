@@ -1,4 +1,4 @@
-=head1 DBIx::SchemaUpgrader
+=head1 DBIx::Schema::UpToDate
 
 This module provides a base class for keeping a database schema up to date.
 If you need to make changes to the schema

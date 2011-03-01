@@ -3,7 +3,7 @@ use warnings;
 use Test::More 0.96;
 use Test::MockObject 1.09;
 
-my $mod = 'DBIx::SchemaUpgrader';
+my $mod = 'DBIx::Schema::UpToDate';
 eval "require $mod" or die $@;
 
 my ($table_info, $db_ver);

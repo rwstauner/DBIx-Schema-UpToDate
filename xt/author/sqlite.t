@@ -7,7 +7,7 @@ use DBI;
 eval "require DBD::SQLite"
 	or plan skip_all => 'DBD::SQLite required for this author test';
 
-my $mod = 'DBIx::SchemaUpgrader';
+my $mod = 'DBIx::Schema::UpToDate';
 eval "require $mod" or die $@;
 
 my $dbh = DBI->connect('dbi:SQLite:dbname=:memory:', undef, undef, {FetchHashKeyName => 'NAME_lc'});

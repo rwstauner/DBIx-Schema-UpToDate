@@ -1,5 +1,5 @@
-package DBIx::SchemaUpgrader;
-# ABSTRACT: Automatically upgrade a database schema
+package DBIx::Schema::UpToDate;
+# ABSTRACT: Helps keep a database schema up to date
 
 use strict;
 use warnings;
@@ -197,7 +197,7 @@ sub version_table_name {
 =head1 SYNOPSIS
 
 	package Local::Database;
-	use parent 'DBIx::SchemaUpgrader';
+	use parent 'DBIx::Schema::UpToDate';
 
 	sub instructions {
 		my ($self) = @_;
@@ -249,7 +249,7 @@ The instructions can be run individually (outside of L</build>)
 for testing your subs...
 
 	my $dbh = DBI->connect(@in_memory_database);
-	my $schema = DBIx::SchemaUpgrader->new(dbh => $dbh, build => 0);
+	my $schema = DBIx::Schema::UpToDate->new(dbh => $dbh, build => 0);
 	$schema->initialize_version_table;
 
 	$schema->upgrade_to_version(1);
@@ -272,7 +272,7 @@ for testing your subs...
 =head1 TODO
 
 =for :list
-* Rename this module
+* Come up with a better name (too late).
 * Check for DBI errors?
 You should probably use RaiseError in DBI,
 but perhaps we should be checking the return values of certain L<DBI> calls.
