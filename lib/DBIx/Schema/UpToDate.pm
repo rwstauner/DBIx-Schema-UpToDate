@@ -67,7 +67,7 @@ sub build {
 
 	my $latest = $self->latest_version;
 
-	# execute each instruction required to go from current to latest version
+	# execute each update required to go from current to latest version
 	# (starting with next version, obviously (don't redo current))
 	$self->update_to_version($_)
 		foreach ($current + 1) .. $latest;
@@ -110,23 +110,8 @@ insert initial version record.
 sub initialize_version_table {
 	my ($self) = @_;
 	$self->dbh->do('CREATE TABLE ' . $self->version_table_name .
-		' (version integer, upgraded timestamp)');
+		' (version integer, updated timestamp)');
 	$self->set_version(0);
-}
-
-=item instructions
-
-Returns an arrayref of subs (coderefs)
-that can be used to rebuild the database from one version to the next.
-This is used by L</build> to replay a recorded database history
-on the L</dbh> until the database schema is up to date.
-
-=cut
-
-sub instructions {
-	my ($self) = @_;
-	return $self->{instructions} ||= [
-	];
 }
 
 =item latest_version
@@ -137,7 +122,7 @@ Returns the latest [possible] version of the database schema.
 
 sub latest_version {
 	my ($self) = @_;
-	return scalar @{ $self->instructions };
+	return scalar @{ $self->updates };
 }
 
 =item set_version
@@ -145,22 +130,37 @@ sub latest_version {
 	$cache->set_version($verison);
 
 Sets the current database version to C<$version>.
-Called from L</update_to_version> after executing the appropriate instruction.
+Called from L</update_to_version> after executing the appropriate update.
 
 =cut
 
 sub set_version {
 	my ($self, $version) = @_;
 	$self->dbh->do('INSERT INTO ' . $self->version_table_name .
-		' (version, upgraded) VALUES(?, ?)',
+		' (version, updated) VALUES(?, ?)',
 		{}, $version, time);
+}
+
+=item updates
+
+Returns an arrayref of subs (coderefs)
+that can be used to rebuild the database from one version to the next.
+This is used by L</build> to replay a recorded database history
+on the L</dbh> until the database schema is up to date.
+
+=cut
+
+sub updates {
+	my ($self) = @_;
+	return $self->{updates} ||= [
+	];
 }
 
 =item update_to_version
 
 	$cache->update_to_version($version);
 
-Executes the instruction associated with C<$version>
+Executes the update associated with C<$version>
 in order to bring database up to that version.
 
 =cut
@@ -171,8 +171,8 @@ sub update_to_version {
 
 	$dbh->begin_work();
 
-	# execute instructions to update database to $version
-	$self->instructions->[$version - 1]->($self);
+	# execute updates to bring database to $version
+	$self->updates->[$version - 1]->($self);
 
 	# save the version now in case we get interrupted before the next commit
 	$self->set_version($version);
@@ -199,10 +199,10 @@ sub version_table_name {
 	package Local::Database;
 	use parent 'DBIx::Schema::UpToDate';
 
-	sub instructions {
+	sub updates {
 		my ($self) = @_;
 		my $dbh = $self->dbh;
-		$self->{instructions} ||= [
+		$self->{updates} ||= [
 			sub {
 				$dbh->do('-- sql');
 				$self->do_something_else;
@@ -241,21 +241,21 @@ and pick the one that's right for your situation.
 
 =head1 USAGE
 
-Subclasses should overwrite L</instructions>
+Subclasses should overwrite L</updates>
 to return an arrayref of subs (coderefs) that will be executed
 to bring the schema up to date.
 
 The rest of the methods are small in the hopes that you
 can overwrite the ones you need to get the customization you require.
 
-The instructions can be run individually (outside of L</build>)
+The updates can be run individually (outside of L</build>)
 for testing your subs...
 
 	my $dbh = DBI->connect(@in_memory_database);
 	my $schema = DBIx::Schema::UpToDate->new(dbh => $dbh, build => 0);
 	$schema->initialize_version_table;
 
-	$schema->upgrade_to_version(1);
+	$schema->update_to_version(1);
 	# execute calls on $dbh to test changes
 	$schema->dbh->do( @something );
 	# test row output or column information or whatever
@@ -269,7 +269,7 @@ for testing your subs...
 
 	...
 
-	is($schema->current_version, $schema->latest_version, 'upgraded to latest version');
+	is($schema->current_version, $schema->latest_version, 'updated to latest version');
 	done_testing;
 
 =head1 TODO

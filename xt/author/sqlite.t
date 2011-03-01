@@ -24,7 +24,7 @@ is($schema->current_version, undef, 'not built');
 
 # build
 my $updated = 0;
-$schema->{instructions} = [
+$schema->{updates} = [
 	sub {
 		$_[0]->dbh->do('CREATE TABLE goober (nut text)');
 		++$updated;
@@ -45,7 +45,7 @@ is_deeply($schema->dbh->selectall_arrayref('SELECT * FROM goober', {Slice => {}}
 	[{nut => 'butter'}], 'got records');
 
 $updated = 0;
-push(@{$schema->{instructions}},
+push(@{$schema->{updates}},
 	sub {
 		$_[0]->dbh->do("INSERT INTO goober (nut) VALUES('hazel')");
 		++$updated;

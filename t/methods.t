@@ -29,16 +29,16 @@ $db_ver = 1;
 is($schema->current_version, 1, 'version fetched');
 
 # latest_version
-$schema->{instructions} = [1, 2, 3, 4];
+$schema->{updates} = [1, 2, 3, 4];
 is($schema->latest_version, 4, 'fake latest_version');
-delete $schema->{instructions};
+delete $schema->{updates};
 # this one's a little silly
-is($schema->latest_version, @{ $schema->instructions }, 'latest version');
+is($schema->latest_version, @{ $schema->updates }, 'latest version');
 
 # build
 my $updated = 0;
 $db_ver = 0;
-$schema->{instructions} = [sub { $updated++ }, sub { $updated++ }];
+$schema->{updates} = [sub { $updated++ }, sub { $updated++ }];
 
 $sth->set_series('fetchall_arrayref', [], [1]);
 $schema->build;
@@ -62,12 +62,12 @@ like($@, qr/version table/, 'build died w/o version table');
 
 # update_to_version
 my $inst = [0, 0];
-$schema->{instructions} = [sub { $inst->[0]++ }, sub { $inst->[1]++ }];
+$schema->{updates} = [sub { $inst->[0]++ }, sub { $inst->[1]++ }];
 $schema->update_to_version(2);
-is_deeply($inst, [0,1], 'correct instruction executed');
+is_deeply($inst, [0,1], 'correct update executed');
 $schema->update_to_version(1);
-is_deeply($inst, [1,1], 'correct instruction executed');
+is_deeply($inst, [1,1], 'correct update executed');
 $schema->update_to_version(1);
-is_deeply($inst, [2,1], 'correct instruction executed');
+is_deeply($inst, [2,1], 'correct update executed');
 
 done_testing;
