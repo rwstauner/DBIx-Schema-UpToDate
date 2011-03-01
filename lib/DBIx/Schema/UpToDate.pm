@@ -233,6 +233,9 @@ This is done with subs (coderefs) so you can access the object
 and its database handle.
 
 It is intentially simple and is not intended for large scale applications.
+It may be a good fit for small embedded databases.
+It can also be useful if you need to reference other parts of your application
+as the subs allow you to utilize the object (and anything else you can reach).
 Check L</SEE ALSO> for alternative solutions
 and pick the one that's right for your situation.
 
@@ -297,6 +300,6 @@ Much bigger scale than what I was looking for.
 Needed something without Moose.
 * L<ORLite::Migrate> (L<http://use.perl.org/~Alias/journal/38087>)
 Much bigger scale than what I was looking for.
-Wasn't using ORLite, and didn't want to use separate script files
+Wasn't using ORLite, and didn't want to use separate script files.
 
 =cut
