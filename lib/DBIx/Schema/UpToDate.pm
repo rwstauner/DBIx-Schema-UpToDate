@@ -35,7 +35,7 @@ sub new {
 	return $self;
 }
 
-=item dbh
+=method dbh
 
 Returns the object's database handle.
 
@@ -46,7 +46,7 @@ sub dbh {
 	return $self->{dbh};
 }
 
-=item current_version
+=method current_version
 
 Determine the current version of the database schema.
 
@@ -73,7 +73,7 @@ sub current_version {
 	return $version;
 }
 
-=item initialize_version_table
+=method initialize_version_table
 
 Create the version metadata table in the database and
 insert initial version record.
@@ -87,7 +87,7 @@ sub initialize_version_table {
 	$self->set_version(0);
 }
 
-=item latest_version
+=method latest_version
 
 Returns the latest [possible] version of the database schema.
 
@@ -98,7 +98,7 @@ sub latest_version {
 	return scalar @{ $self->updates };
 }
 
-=item set_version
+=method set_version
 
 	$cache->set_version($verison);
 
@@ -114,7 +114,7 @@ sub set_version {
 		{}, $version, time);
 }
 
-=item updates
+=method updates
 
 Returns an arrayref of subs (coderefs)
 that can be used to update the database from one version to the next.
@@ -129,7 +129,7 @@ sub updates {
 	];
 }
 
-=item update_to_version
+=method update_to_version
 
 	$cache->update_to_version($version);
 
@@ -153,7 +153,7 @@ sub update_to_version {
 	$dbh->commit();
 }
 
-=item up_to_date
+=method up_to_date
 
 Ensures that the database is up to date.
 If it is not it will apply updates
@@ -182,7 +182,7 @@ sub up_to_date {
 		foreach ($current + 1) .. $latest;
 }
 
-=item version_table_name
+=method version_table_name
 
 The name to use the for the schema version metadata.
 
