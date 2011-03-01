@@ -245,6 +245,30 @@ to bring the schema up to date.
 The rest of the methods are small in the hopes that you
 can overwrite the ones you need to get the customization you require.
 
+The instructions can be run individually (outside of L</build>)
+for testing your subs...
+
+	my $dbh = DBI->connect(@in_memory_database);
+	my $schema = DBIx::SchemaUpgrader->new(dbh => $dbh, build => 0);
+	$schema->initialize_version_table;
+
+	$schema->upgrade_to_version(1);
+	# execute calls on $dbh to test changes
+	$schema->dbh->do( @something );
+	# test row output or column information or whatever
+	ok( $test_something, $here );
+
+	$schema->update_to_version(2);
+	# test things
+
+	$schema->update_to_version(3);
+	# test changes
+
+	...
+
+	is($schema->current_version, $schema->latest_version, 'upgraded to latest version');
+	done_testing;
+
 =head1 TODO
 
 =for :list
