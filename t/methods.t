@@ -19,7 +19,7 @@ my $dbh = Test::MockObject->new()
 	->mock(selectcol_arrayref => sub { [$db_ver] })
 	->mock(table_info => sub { $sth });
 
-my $schema = new_ok($mod, [dbh => $dbh, build => 0]);
+my $schema = new_ok($mod, [dbh => $dbh, auto_update => 0]);
 
 # current_version
 $table_info = [];
@@ -35,30 +35,30 @@ delete $schema->{updates};
 # this one's a little silly
 is($schema->latest_version, @{ $schema->updates }, 'latest version');
 
-# build
+# up_to_date()
 my $updated = 0;
 $db_ver = 0;
 $schema->{updates} = [sub { $updated++ }, sub { $updated++ }];
 
 $sth->set_series('fetchall_arrayref', [], [1]);
-$schema->build;
+$schema->up_to_date();
 is($updated, 2, 'correct number of updates');
 
 $sth->mock('fetchall_arrayref', sub { [1] });
 
 $updated = 0;
 $db_ver = 1;
-$schema->build;
+$schema->up_to_date();
 is($updated, 1, 'correct number of updates');
 
 $updated = 0;
 $db_ver = 2;
-$schema->build;
+$schema->up_to_date();
 is($updated, 0, 'correct number of updates');
 
 $sth->set_series('fetchall_arrayref', [], []);
-is(eval { $schema->build; }, undef, 'build dies w/o current version');
-like($@, qr/version table/, 'build died w/o version table');
+is(eval { $schema->up_to_date(); }, undef, 'up_to_date() dies w/o current version');
+like($@, qr/version table/, 'up_to_date() died w/o version table');
 
 # update_to_version
 my $inst = [0, 0];

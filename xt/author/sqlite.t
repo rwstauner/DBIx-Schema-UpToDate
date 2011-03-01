@@ -11,7 +11,7 @@ my $mod = 'DBIx::Schema::UpToDate';
 eval "require $mod" or die $@;
 
 my $dbh = DBI->connect('dbi:SQLite:dbname=:memory:', undef, undef, {FetchHashKeyName => 'NAME_lc'});
-my $schema = new_ok($mod, [dbh => $dbh, build => 0]);
+my $schema = new_ok($mod, [dbh => $dbh, auto_update => 0]);
 
 # current_version
 is($schema->current_version, undef, 'not built');
@@ -22,7 +22,7 @@ is($schema->current_version, 57, 'lying about version');
 $schema->dbh->do('DROP TABLE schema_version');
 is($schema->current_version, undef, 'not built');
 
-# build
+# up_to_date()
 my $updated = 0;
 $schema->{updates} = [
 	sub {
@@ -36,7 +36,7 @@ $schema->{updates} = [
 	},
 ];
 
-$schema->build;
+$schema->up_to_date();
 is($updated, 2, 'correct number of updates');
 is($schema->current_version, 2, 'correct current version');
 is(@{$schema->dbh->table_info('%', '%', 'goober')->fetchall_arrayref}, 1, 'table created');
@@ -52,7 +52,7 @@ push(@{$schema->{updates}},
 	}
 );
 
-$schema->build;
+$schema->up_to_date();
 is($updated, 1, 'correct number of updates');
 is($schema->current_version, 3, 'correct current version');
 is_deeply($schema->dbh->selectall_arrayref('SELECT * FROM goober', {Slice => {}}),
@@ -61,7 +61,7 @@ is_deeply($schema->dbh->selectall_arrayref('SELECT * FROM goober', {Slice => {}}
 # reset and try again
 $schema->dbh->do("DROP TABLE $_") for qw(schema_version goober nut);
 $updated = 0;
-$schema->build;
+$schema->up_to_date();
 is($updated, 3, 'correct number of updates');
 is($schema->current_version, 3, 'correct current version');
 is_deeply($schema->dbh->selectall_arrayref('SELECT * FROM goober', {Slice => {}}),

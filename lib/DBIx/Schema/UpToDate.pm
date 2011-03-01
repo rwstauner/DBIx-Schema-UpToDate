@@ -13,24 +13,24 @@ Options used by the base module:
 =for :list
 * C<dbh> - A B<d>ataB<b>ase B<h>andle (as returned from C<< DBI->connect >>)
 Database commands will be executed against this handle.
-* C<build> - Boolean
-By default L</build> is called at initialization (after being blessed).
+* C<auto_update> - Boolean
+By default L</up_to_date> is called at initialization (just after being blessed).
 Set this value to false to disable this if you need to do something else
-before building.  You will have to call L</build> yourself.
+before updating.  You will have to call L</up_to_date> yourself.
 
 =cut
 
 sub new {
 	my $class = shift;
 	my $self = {
-		build => 1,
+		auto_update => 1,
 		@_ == 1 ? %{$_[0]} : @_
 	};
 	bless $self, $class;
 
 	# make sure the database schema is current
-	$self->build()
-		if $self->{build};
+	$self->up_to_date()
+		if $self->{auto_update};
 
 	return $self;
 }
@@ -44,33 +44,6 @@ Returns the object's database handle.
 sub dbh {
 	my ($self) = @_;
 	return $self->{dbh};
-}
-
-=item build
-
-Builds the database from L</current_version> to L</latest_version>
-performing whatever tasks may be necessary to bring the schema up to date.
-
-=cut
-
-sub build {
-	my ($self) = @_;
-	my $dbh = $self->dbh;
-
-	my $current = $self->current_version;
-	if( !defined($current) ){
-		$self->initialize_version_table;
-		$current = $self->current_version;
-		die("Unable to initialize version table\n")
-			if !defined($current);
-	}
-
-	my $latest = $self->latest_version;
-
-	# execute each update required to go from current to latest version
-	# (starting with next version, obviously (don't redo current))
-	$self->update_to_version($_)
-		foreach ($current + 1) .. $latest;
 }
 
 =item current_version
@@ -144,8 +117,8 @@ sub set_version {
 =item updates
 
 Returns an arrayref of subs (coderefs)
-that can be used to rebuild the database from one version to the next.
-This is used by L</build> to replay a recorded database history
+that can be used to update the database from one version to the next.
+This is used by L</up_to_date> to replay a recorded database history
 on the L</dbh> until the database schema is up to date.
 
 =cut
@@ -178,6 +151,35 @@ sub update_to_version {
 	$self->set_version($version);
 
 	$dbh->commit();
+}
+
+=item up_to_date
+
+Ensures that the database is up to date.
+If it is not it will apply updates
+after L</current_version> up to L</latest_version>
+to bring the schema up to date.
+
+=cut
+
+sub up_to_date {
+	my ($self) = @_;
+	my $dbh = $self->dbh;
+
+	my $current = $self->current_version;
+	if( !defined($current) ){
+		$self->initialize_version_table;
+		$current = $self->current_version;
+		die("Unable to initialize version table\n")
+			if !defined($current);
+	}
+
+	my $latest = $self->latest_version;
+
+	# execute each update required to go from current to latest version
+	# (starting with next version, obviously (don't redo current))
+	$self->update_to_version($_)
+		foreach ($current + 1) .. $latest;
 }
 
 =item version_table_name
@@ -248,11 +250,13 @@ to bring the schema up to date.
 The rest of the methods are small in the hopes that you
 can overwrite the ones you need to get the customization you require.
 
-The updates can be run individually (outside of L</build>)
+The updates can be run individually (outside of L</up_to_date>)
 for testing your subs...
 
 	my $dbh = DBI->connect(@in_memory_database);
-	my $schema = DBIx::Schema::UpToDate->new(dbh => $dbh, build => 0);
+	my $schema = DBIx::Schema::UpToDate->new(dbh => $dbh, auto_update => 0);
+
+	# don't forget this:
 	$schema->initialize_version_table;
 
 	$schema->update_to_version(1);
