@@ -22,8 +22,7 @@ before updating.  You will have to call L</up_to_date> yourself.
 * C<transactions> - Boolean
 By default L</update_to_version> does its work in a transaction.
 Set this value to false to disable this behavior
-(in case your database doesn't support transactions
-or you are mananging transactions yourself).
+(in case your database doesn't support transactions).
 
 =cut
 
