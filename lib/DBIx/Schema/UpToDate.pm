@@ -249,7 +249,8 @@ If you need to make changes to the schema
 in remote databases in an automated manner
 you may not be able to ensure what version of the database is installed
 by the time it gets the update.
-This module will apply patches sequentially to bring the database schema
+This module will apply updates (defined as perl subs (coderefs))
+sequentially to bring the database schema
 up to the latest version from whatever the current version is.
 
 The aim of this module is to enable you to write incredibly simple subclasses
