@@ -3,6 +3,7 @@ package DBIx::Schema::UpToDate;
 
 use strict;
 use warnings;
+use Carp qw(croak carp); # core
 
 =method new
 
@@ -61,7 +62,7 @@ sub current_version {
 	my $tables = $dbh->table_info('%', '%', $table, 'TABLE')
 		->fetchall_arrayref;
 
-	# get current database version
+	# if table exists query it for current database version
 	if( @$tables ){
 		my $v = $dbh->selectcol_arrayref(
 			"SELECT version from $table ORDER BY version DESC LIMIT 1"
@@ -82,8 +83,13 @@ insert initial version record.
 
 sub initialize_version_table {
 	my ($self) = @_;
-	$self->dbh->do('CREATE TABLE ' . $self->version_table_name .
-		' (version integer, updated timestamp)');
+	my $dbh = $self->dbh;
+
+	$dbh->do('CREATE TABLE ' . $self->version_table_name .
+		' (version integer, updated timestamp)'
+	)
+		or croak $dbh->errstr;
+
 	$self->set_version(0);
 }
 
@@ -109,9 +115,13 @@ Called from L</update_to_version> after executing the appropriate update.
 
 sub set_version {
 	my ($self, $version) = @_;
-	$self->dbh->do('INSERT INTO ' . $self->version_table_name .
+	my $dbh = $self->dbh;
+
+	$dbh->do('INSERT INTO ' . $self->version_table_name .
 		' (version, updated) VALUES(?, ?)',
-		{}, $version, time);
+		{}, $version, time()
+	)
+		or croak $dbh->errstr;
 }
 
 =method updates
@@ -142,7 +152,8 @@ sub update_to_version {
 	my ($self, $version) = @_;
 	my $dbh = $self->dbh;
 
-	$dbh->begin_work();
+	$dbh->begin_work()
+		or croak $dbh->errstr;
 
 	# execute updates to bring database to $version
 	$self->updates->[$version - 1]->($self);
@@ -150,7 +161,8 @@ sub update_to_version {
 	# save the version now in case we get interrupted before the next commit
 	$self->set_version($version);
 
-	$dbh->commit();
+	$dbh->commit()
+		or croak $dbh->errstr;
 }
 
 =method up_to_date
@@ -281,9 +293,6 @@ for testing your subs...
 
 =for :list
 * Come up with a better name (too late).
-* Check for DBI errors?
-You should probably use L<DBI/RaiseError>,
-but perhaps we should be checking the return values of L<DBI/do>.
 * Use L<DBI/quote_identifier> on the table name
 * Add an initial_version attribute to allow altering the history
 
