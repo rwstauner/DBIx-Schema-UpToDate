@@ -1,5 +1,13 @@
 =head1 DBIx::SchemaUpgrader
 
+This module provides a base class for keeping a database schema up to date.
+If you need to make changes to the schema
+in remote databases in an automated manner
+you may not be able to ensure what version of the database is installed
+by the time it gets the update.
+This module will apply patches sequentially to bring the database schema
+up to the latest version from whatever the current version is.
+
 See module POD for more information.
 
 =cut
