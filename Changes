@@ -2,6 +2,8 @@ Revision history for DBIx-Schema-UpToDate
 
 {{$NEXT}}
 
+  - Superficial dist/release changes
+
 0.005 2011-03-01
 
   - Initial release to CPAN
