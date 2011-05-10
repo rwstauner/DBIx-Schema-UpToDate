@@ -382,6 +382,7 @@ for testing your subs...
 =for :list
 * Come up with a better name (too late).
 * Add an initial_version attribute to allow altering the history
+* Confirm that the driver handles LIMIT 1 before trying to use it.
 
 =head1 RATIONALE
 
