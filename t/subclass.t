@@ -23,21 +23,22 @@ test_with_dbd Mock => sub {
   local *DBD::Mock::db::table_info = sub { $_[0]->prepare('SELECT table_info()'); };
   use warnings;
 
+  foreach my $trans ( 0, 1 )
   {
     my $dbh = mock_dbh();
-    results_for_empty_schema($dbh);
+    results_for_empty_schema($dbh, $trans);
 
-    my $schema = Test_Schema->new(dbh => $dbh);
+    my $schema = Test_Schema->new(dbh => $dbh, transactions => $trans);
     my $history = $dbh->{mock_all_history};
 
     # 5 for schema initialization
-    # 2 statements plus 1 version increase + 2 for transaction in first update
-    # 1 statement  plus 1 + 2 for second
-    is(@$history, 5 + 5 + 4, 'expected number of statements')
+    # 2 statements plus 1 version increase in first update
+    # 1 statement  plus 1 for second
+    is(@$history, 5 + 3 + 2 + (3 * 2 * $trans), 'expected number of statements')
       or diag explain $history;
 
-    is($history->[ 7]->{statement}, q[INSERT INTO tbl1 VALUES('goo', 1)], '1st update');
-    is($history->[11]->{statement}, q[INSERT INTO tbl1 VALUES('ber', 2)], '2nd update');
+    is($history->[ 6 + ($trans * 2 * 2) - $trans]->{statement}, q[INSERT INTO tbl1 VALUES('goo', 1)], '1st update');
+    is($history->[ 8 + ($trans * 2 * 3) - $trans]->{statement}, q[INSERT INTO tbl1 VALUES('ber', 2)], '2nd update');
   }
 
   {
@@ -88,14 +89,14 @@ sub mock_dbh {
 my @table_info_columns = qw(TABLE_CAT TABLE_SCHEM TABLE_NAME TABLE_TYPE REMARKS);
 
 sub results_for_empty_schema {
-  my ($dbh) = @_;
+  my ($dbh, $trans) = @_;
   # table_info (first is empty)
   $dbh->{mock_add_resultset} = [
     [@table_info_columns],
   ];
-  # initialize: create, insert
-  $dbh->{mock_add_resultset} = [];
-  $dbh->{mock_add_resultset} = [];
+  # initialize
+  $dbh->{mock_add_resultset} = []
+    for 1 .. (2 + (2 * $trans)); # create, insert + (begin, commit)
   results_for_existing_schema($dbh, 0);
 }
 

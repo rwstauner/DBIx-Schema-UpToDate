@@ -3,6 +3,7 @@ Revision history for DBIx-Schema-UpToDate
 {{$NEXT}}
 
   - Use DBI::quote_identifier on table and column names
+  - Do version table intialization in a transaction (if configured)
   - List additional alternative modules in SEE ALSO
   - Superficial dist/release changes
 

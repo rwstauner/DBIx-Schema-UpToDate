@@ -44,6 +44,31 @@ sub new {
   return $self;
 }
 
+=method begin_work
+
+Convenience method for calling L<DBI/begin_work>
+on the database handle if C<transactions> are enabled.
+
+=method commit
+
+Convenience method for calling L<DBI/commit>
+on the database handle if C<transactions> are enabled.
+
+=cut
+
+foreach my $action ( qw(begin_work commit) ){
+  no strict 'refs'; ## no critic (NoStrict)
+  *$action = sub {
+    my ($self) = @_;
+    if( $self->{transactions} ){
+      my $dbh = $self->dbh;
+      $dbh->$action()
+        or croak $dbh->errstr;
+    }
+  }
+}
+
+
 =method dbh
 
 Returns the object's database handle.
@@ -98,12 +123,16 @@ sub initialize_version_table {
 
   my ($version, $updated) = $self->quote_identifiers(qw(version updated));
 
+  $self->begin_work();
+
   $dbh->do('CREATE TABLE ' . $self->quoted_table_name .
     " ($version integer, $updated timestamp)"
   )
     or croak $dbh->errstr;
 
   $self->set_version(0);
+
+  $self->commit();
 }
 
 =method latest_version
@@ -194,12 +223,8 @@ in order to bring database up to that version.
 
 sub update_to_version {
   my ($self, $version) = @_;
-  my $dbh = $self->dbh;
 
-  if( $self->{transactions} ){
-    $dbh->begin_work()
-      or croak $dbh->errstr;
-  }
+  $self->begin_work();
 
   # execute updates to bring database to $version
   $self->updates->[$version - 1]->($self);
@@ -207,10 +232,7 @@ sub update_to_version {
   # save the version now in case we get interrupted before the next commit
   $self->set_version($version);
 
-  if( $self->{transactions} ){
-    $dbh->commit()
-      or croak $dbh->errstr;
-  }
+  $self->commit();
 }
 
 =method up_to_date
