@@ -1,9 +1,10 @@
 # vim: set ts=2 sts=2 sw=2 expandtab smarttab:
+use strict;
+use warnings;
+
 package DBIx::Schema::UpToDate;
 # ABSTRACT: Helps keep a database schema up to date
 
-use strict;
-use warnings;
 use Carp qw(croak carp); # core
 
 =method new
