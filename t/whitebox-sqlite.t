@@ -6,7 +6,7 @@ use Test::MockObject 1.09;
 use DBI;
 
 eval "require DBD::SQLite"
-  or plan skip_all => 'DBD::SQLite required for this author test';
+  or plan skip_all => 'DBD::SQLite required for this test';
 
 my $mod = 'DBIx::Schema::UpToDate';
 eval "require $mod" or die $@;
