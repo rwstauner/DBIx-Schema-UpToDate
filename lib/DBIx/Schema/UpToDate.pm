@@ -72,8 +72,11 @@ sub current_version {
 
   # if table exists query it for current database version
   if( @$tables ){
+    my $qtable = $self->quoted_table_name;
+    my $field = $dbh->quote_identifier('version');
+
     my $v = $dbh->selectcol_arrayref(
-      "SELECT version from $table ORDER BY version DESC LIMIT 1"
+      "SELECT $field from $qtable ORDER BY $field DESC LIMIT 1"
     )->[0];
     $version = $v
       if defined $v;
@@ -93,8 +96,10 @@ sub initialize_version_table {
   my ($self) = @_;
   my $dbh = $self->dbh;
 
-  $dbh->do('CREATE TABLE ' . $self->version_table_name .
-    ' (version integer, updated timestamp)'
+  my ($version, $updated) = $self->quote_identifiers(qw(version updated));
+
+  $dbh->do('CREATE TABLE ' . $self->quoted_table_name .
+    " ($version integer, $updated timestamp)"
   )
     or croak $dbh->errstr;
 
@@ -112,6 +117,35 @@ sub latest_version {
   return scalar @{ $self->updates };
 }
 
+=method quoted_table_name
+
+Returns the table name (L</version_table_name>)
+quoted by L<DBI/quote_identifier>.
+
+=cut
+
+sub quoted_table_name {
+  my ($self) = @_;
+  return $self->dbh->quote_identifier($self->version_table_name);
+}
+
+=method quote_identifiers
+
+  @quoted = $self->quote_identifiers(qw(field1 field2));
+
+Convenience method for passing each argument
+through L<DBI/quote_identifier>.
+
+Returns a list.
+
+=cut
+
+sub quote_identifiers {
+  my ($self, @names) = @_;
+  my $dbh = $self->dbh;
+  return map { $dbh->quote_identifier($_) } @names;
+}
+
 =method set_version
 
   $cache->set_version($verison);
@@ -125,8 +159,10 @@ sub set_version {
   my ($self, $version) = @_;
   my $dbh = $self->dbh;
 
-  $dbh->do('INSERT INTO ' . $self->version_table_name .
-    ' (version, updated) VALUES(?, ?)',
+  $dbh->do('INSERT INTO ' . $self->quoted_table_name .
+    ' (' .
+      join(', ', $self->quote_identifiers(qw(version updated)))
+    . ') VALUES(?, ?)',
     {}, $version, time()
   )
     or croak $dbh->errstr;
@@ -323,7 +359,6 @@ for testing your subs...
 
 =for :list
 * Come up with a better name (too late).
-* Use L<DBI/quote_identifier> on the table name
 * Add an initial_version attribute to allow altering the history
 
 =head1 RATIONALE

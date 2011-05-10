@@ -19,6 +19,7 @@ my $dbh = Test::MockObject->new()
   ->mock(commit     => sub { $dbi_last = 'commit';     ++$committed; $commit })
   ->mock(do         => sub { $dbi_last = 'do ' . ($_[1] =~ /^(\S+)/)[0]; push(@dbh_done, $_[1]); $do })
   ->mock(errstr     => sub { "failure: $dbi_last" })
+  ->mock(quote_identifier => sub { qq{"$_[0]"} })
   ->mock(selectcol_arrayref => sub { [$db_ver] })
   ->mock(table_info => sub { $sth });
 

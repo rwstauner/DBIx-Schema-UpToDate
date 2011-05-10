@@ -20,3 +20,10 @@ sub updates {
     },
   ];
 }
+
+# test with a table name that needs to be quoted
+sub version_table_name {
+  'schema version';
+}
+
+1;
