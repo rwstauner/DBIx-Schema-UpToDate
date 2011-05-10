@@ -221,6 +221,9 @@ sub version_table_name {
 
 =for :stopwords TODO dbh
 
+=for test_synopsis
+my @connection_args;
+
 =head1 SYNOPSIS
 
   package Local::Database;
