@@ -230,12 +230,20 @@ my @connection_args;
   use parent 'DBIx::Schema::UpToDate';
 
   sub updates {
-    my ($self) = @_;
-    my $dbh = $self->dbh;
-    $self->{updates} ||= [
+    shift->{updates} ||= [
+
+      # version 1
       sub {
-        $dbh->do('-- sql');
+        my ($self) = @_;
+        $self->dbh->do('-- sql');
         $self->do_something_else;
+      },
+
+      # version 2
+      sub {
+        my ($self) = @_;
+        my $val = Local::Project::NewerClass->value;
+        $self->dbh->do('INSERT INTO values (?)', {}, $val);
       },
     ];
   }
@@ -267,6 +275,7 @@ It is intentionally simple and is not intended for large scale applications.
 It may be a good fit for small embedded databases.
 It can also be useful if you need to reference other parts of your application
 as the subs allow you to utilize the object (and anything else you can reach).
+
 Check L</SEE ALSO> for alternative solutions
 and pick the one that's right for your situation.
 
@@ -275,6 +284,11 @@ and pick the one that's right for your situation.
 Subclasses should overwrite L</updates>
 to return an arrayref of subs (coderefs) that will be executed
 to bring the schema up to date.
+
+Each sub (coderef) will be called as a method
+(it will receive the object as its first parameter):
+
+  sub { my ($self) = @_; $self->dbh->do('...'); }
 
 The rest of the methods are small in the hopes that you
 can overwrite the ones you need to get the customization you require.
