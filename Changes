@@ -2,6 +2,7 @@ Revision history for DBIx-Schema-UpToDate
 
 {{$NEXT}}
 
+  - List additional alternative modules in SEE ALSO
   - Superficial dist/release changes
 
 0.005 2011-03-01

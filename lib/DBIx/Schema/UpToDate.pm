@@ -316,6 +316,11 @@ but didn't find one that fit my needs, so I released what I had made.
 
 =head1 SEE ALSO
 
+Here are a number of alternative modules I have found
+(some older, some newer) that perform a similar task,
+why I didn't use them,
+and why you probably should.
+
 =for :list
 * L<DBIx::VersionedSchema>
 Was close to what I was looking for, but not customizable enough.
@@ -323,8 +328,15 @@ Were I to subclass it I would have needed to overwrite the two main methods.
 * L<DBIx::VersionedDDL>
 Much bigger scale than what I was looking for.
 Needed something without L<Moose>.
+* L<DBIx::Migration::Classes>
+Something new(er than this module)... haven't investigated.
 * L<ORLite::Migrate> (L<http://use.perl.org/~Alias/journal/38087>)
 Much bigger scale than what I was looking for.
 Wasn't using L<ORLite>, and didn't want to use separate script files.
+* L<DBIx::Class::Schema::Versioned>
+Not using L<DBIx::Class>; again, significantly larger scale than I desired.
+* L<DBIx::Class::DeploymentHandler>
+Not using L<DBIx::Class>; more powerful than the previous means
+it's even larger than what was already more than I needed.
 
 =cut
