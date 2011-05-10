@@ -1,3 +1,4 @@
+# vim: set ts=2 sts=2 sw=2 expandtab smarttab:
 use strict;
 use warnings;
 use Test::More 0.96;
@@ -8,18 +9,18 @@ eval "require $mod" or die $@;
 
 my ($table_info, $db_ver);
 my $sth = Test::MockObject->new()
-	->mock(fetchall_arrayref => sub { $table_info })
-	->mock(fetchall_hashref  => sub { $table_info });
+  ->mock(fetchall_arrayref => sub { $table_info })
+  ->mock(fetchall_hashref  => sub { $table_info });
 
 my @dbh_done;
 my ($begun, $committed, $begin, $commit, $do, $dbi_last) = (0, 0, 1, 1, 1, 'unknown');
 my $dbh = Test::MockObject->new()
-	->mock(begin_work => sub { $dbi_last = 'begin_work'; ++$begun;     $begin  })
-	->mock(commit     => sub { $dbi_last = 'commit';     ++$committed; $commit })
-	->mock(do         => sub { $dbi_last = 'do ' . ($_[1] =~ /^(\S+)/)[0]; push(@dbh_done, $_[1]); $do })
-	->mock(errstr     => sub { "failure: $dbi_last" })
-	->mock(selectcol_arrayref => sub { [$db_ver] })
-	->mock(table_info => sub { $sth });
+  ->mock(begin_work => sub { $dbi_last = 'begin_work'; ++$begun;     $begin  })
+  ->mock(commit     => sub { $dbi_last = 'commit';     ++$committed; $commit })
+  ->mock(do         => sub { $dbi_last = 'do ' . ($_[1] =~ /^(\S+)/)[0]; push(@dbh_done, $_[1]); $do })
+  ->mock(errstr     => sub { "failure: $dbi_last" })
+  ->mock(selectcol_arrayref => sub { [$db_ver] })
+  ->mock(table_info => sub { $sth });
 
 my $schema = new_ok($mod, [dbh => $dbh, auto_update => 0]);
 
@@ -64,37 +65,37 @@ like($@, qr/version table/, 'up_to_date() died w/o version table');
 
 # update_to_version transactions
 foreach my $test (
-	[1, 1],
-	[0, 0],
+  [1, 1],
+  [0, 0],
 ){
-	my ($tr, $exp) = @$test;
-	$schema->{transactions} = $tr;
-	$updated = $begun = $committed = 0;
-	$schema->update_to_version(1);
-	is($updated,      1, 'updated');
-	is($begun,     $exp, "transaction: $tr - begin");
-	is($committed, $exp, "transaction: $tr - commit");
+  my ($tr, $exp) = @$test;
+  $schema->{transactions} = $tr;
+  $updated = $begun = $committed = 0;
+  $schema->update_to_version(1);
+  is($updated,      1, 'updated');
+  is($begun,     $exp, "transaction: $tr - begin");
+  is($committed, $exp, "transaction: $tr - commit");
 }
 
 # DBI errors
 {
-	$schema->{transactions} = 1;
-	$begin = $commit = undef;
-	eval { $schema->update_to_version(1) };
-	like($@, qr/failure: begin_work/,  'raise begin_work failure');
-	$begin = 1;
-	eval { $schema->update_to_version(1) };
-	like($@, qr/failure: commit/,       'raise commit failure');
-	$commit = 1;
+  $schema->{transactions} = 1;
+  $begin = $commit = undef;
+  eval { $schema->update_to_version(1) };
+  like($@, qr/failure: begin_work/,  'raise begin_work failure');
+  $begin = 1;
+  eval { $schema->update_to_version(1) };
+  like($@, qr/failure: commit/,       'raise commit failure');
+  $commit = 1;
 
-	$do = undef;
-	eval { $schema->initialize_version_table };
-	like($@, qr/failure: do CREATE/, 'raise do() failure');
-	eval { $schema->set_version(0) };
-	like($@, qr/failure: do INSERT/, 'raise do() failure');
+  $do = undef;
+  eval { $schema->initialize_version_table };
+  like($@, qr/failure: do CREATE/, 'raise do() failure');
+  eval { $schema->set_version(0) };
+  like($@, qr/failure: do INSERT/, 'raise do() failure');
 
-	# reset vars
-	$begin = $commit = $do = 1;
+  # reset vars
+  $begin = $commit = $do = 1;
 }
 
 # update_to_version
