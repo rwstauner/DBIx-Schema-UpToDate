@@ -2,6 +2,8 @@ Revision history for DBIx-Schema-UpToDate
 
 {{$NEXT}}
 
+1.000     2011-05-11T02:39:47Z
+
   [ENHANCEMENTS]
   - Use DBI::quote_identifier on table and column names
   - Do version table intialization in a transaction (if configured)
