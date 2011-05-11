@@ -21,6 +21,10 @@ By default L</up_to_date> is called at initialization
 (just after being blessed).
 Set this value to false to disable this if you need to do something else
 before updating.  You will have to call L</up_to_date> yourself.
+* C<sql_limit> - Boolean
+By default L</current_version> uses a C<LIMIT 1> suffix.
+Set this value to false to disable this behavior
+(in case your database doesn't support the C<LIMIT> syntax).
 * C<transactions> - Boolean
 By default L</update_to_version> does its work in a transaction.
 Set this value to false to disable this behavior
@@ -32,6 +36,7 @@ sub new {
   my $class = shift;
   my $self = {
     auto_update => 1,
+    sql_limit    => 1,
     transactions => 1,
     @_ == 1 ? %{$_[0]} : @_
   };
@@ -101,7 +106,8 @@ sub current_version {
     my $field = $dbh->quote_identifier('version');
 
     my $v = $dbh->selectcol_arrayref(
-      "SELECT $field from $qtable ORDER BY $field DESC LIMIT 1"
+      "SELECT $field from $qtable ORDER BY $field DESC"
+      . ($self->{sql_limit} ? ' LIMIT 1' : '')
     )->[0];
     $version = $v
       if defined $v;
@@ -382,7 +388,6 @@ for testing your subs...
 =for :list
 * Come up with a better name (too late).
 * Add an initial_version attribute to allow altering the history
-* Confirm that the driver handles LIMIT 1 before trying to use it.
 
 =head1 RATIONALE
 

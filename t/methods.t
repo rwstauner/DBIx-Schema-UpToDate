@@ -20,7 +20,7 @@ my $dbh = Test::MockObject->new()
   ->mock(do         => sub { $dbi_last = 'do ' . ($_[1] =~ /^(\S+)/)[0]; push(@dbh_done, $_[1]); $do })
   ->mock(errstr     => sub { "failure: $dbi_last" })
   ->mock(quote_identifier => sub { qq{"$_[0]"} })
-  ->mock(selectcol_arrayref => sub { [$db_ver] })
+  ->mock(selectcol_arrayref => sub { push(@dbh_done, $_[1]); [$db_ver] })
   ->mock(table_info => sub { $sth });
 
 my $schema = new_ok($mod, [dbh => $dbh, auto_update => 0]);
@@ -31,6 +31,14 @@ is($schema->current_version, undef, 'not built');
 $table_info = [version => {}];
 $db_ver = 1;
 is($schema->current_version, 1, 'version fetched');
+
+# sql_limit
+like($dbh_done[-1], qr/DESC LIMIT 1$/, 'used limit');
+$schema->{sql_limit} = 0;
+is($schema->current_version, 1, 'version fetched');
+# limit attribute
+like($dbh_done[-1], qr/DESC$/, 'limit not used');
+$schema->{sql_limit} = 1;
 
 # latest_version
 $schema->{updates} = [1, 2, 3, 4];
