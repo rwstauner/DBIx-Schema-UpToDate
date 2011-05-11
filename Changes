@@ -2,10 +2,19 @@ Revision history for DBIx-Schema-UpToDate
 
 {{$NEXT}}
 
+  [ENHANCEMENTS]
   - Use DBI::quote_identifier on table and column names
   - Do version table intialization in a transaction (if configured)
   - Add 'sql_limit' attribute to disable LIMIT 1 if necessary
+
+  [TESTING]
+  - Additional test scripts using DBD::Mock and DBD::SQLite if available
+
+  [DOCUMENTATION]
+  - Documentation clarifications
   - List additional alternative modules in SEE ALSO
+
+  [OTHER]
   - Superficial dist/release changes
 
 0.005     2011-03-01T16:33:18Z
